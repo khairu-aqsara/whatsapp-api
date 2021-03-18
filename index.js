@@ -2,6 +2,7 @@ const http = require('http');
 const WebSocketServer = require('websocket').server
 const Whatsapp = require('@adiwajshing/baileys');
 const fs = require('fs');
+const qrcode = require('qrcode-terminal');
 
 const server = http.createServer();
 server.listen(9898);
@@ -14,7 +15,6 @@ wsServer.on('request', (request)=>{
     const connectToWhatsapp = async () =>{ 
         conn.regenerateQRIntervalMs = null;
         conn.autoReconnect = Whatsapp.ReconnectMode.onConnectionLost
-
         const path_auth = './auth_info.json';
     
         try{
@@ -42,11 +42,20 @@ wsServer.on('request', (request)=>{
         conn.on('contacts-received', () => {
             connection.send(JSON.stringify(conn.contacts))
         });
+
+        conn.on('qr', qr=>{
+            connection.send(JSON.stringify({qrcode:qr}));
+        });
     
         await conn.connect();
     }
     
     connectToWhatsapp().catch(err=>console.log(err));
+
+    const loadMessage = async ()=> {
+        let msg = await conn.loadMessages('628176331647@s.whatsapp.net', 30);
+        connection.send(JSON.stringify(msg))
+    };
     
     connection.on('message', (message)=>{
         console.log(message.utf8Data);
@@ -54,6 +63,9 @@ wsServer.on('request', (request)=>{
         switch(command){
             case 'info':
                 connection.send(JSON.stringify(conn.user))
+            break;
+            case 'msg':
+                loadMessage();
             break;
         }
     });

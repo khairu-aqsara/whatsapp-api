@@ -5,9 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Websocket Playground</title>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling/lib/qr-code-styling.js"></script>
 </head>
 <body>
-    
+    <div id="canvas"></div>
+
     <script>
         const ws = new WebSocket('ws://localhost:9898');
         ws.onopen = () =>{
@@ -16,7 +18,17 @@
         };
 
         ws.onmessage = (e) => {
-            console.log(JSON.parse(e.data));
+            response = JSON.parse(e.data);
+            if(response.hasOwnProperty('qrcode')){
+                const qrCode = new QRCodeStyling({
+                    width: 300,
+                    height: 300,
+                    data:response.qrcode
+                });
+                qrCode.append(document.getElementById("canvas"));
+            }else{
+                console.log(response);
+            }
         };
     </script>
 </body>
